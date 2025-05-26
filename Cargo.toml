@@ -1,23 +1,10 @@
-[package]
-name = "nexus-erebus-trade-zone"
-version = "0.1.0"
-edition = "2025"
-authors = ["MaliosDark"]
-description = "Nexus Erebus Trade Zone – Solana Anchor program"
-
-[lib]
-name = "nexus_erebus_trade_zone"
-crate-type = ["cdylib", "lib"]
-
-[dependencies]
-anchor-lang = { version = "0.27.0", features = ["init-if-needed"] }
-anchor-spl = "0.27.0"
-mpl-token-metadata = { version = "1.7.0", package = "mpl_token_metadata", features = ["no-entrypoint"] }
-solana-program = "1.17.12"
-
-[features]
-default = ["no-entrypoint"]
-no-entrypoint = []
-
 [workspace]
-members = []
+members = [
+  "programs/nexus_erebus_trade_zone",
+]
+
+[profile.release]
+overflow-checks = true
+
+[patch.crates-io]
+num-derive = { version = "=0.3.2", registry = "crates-io" }

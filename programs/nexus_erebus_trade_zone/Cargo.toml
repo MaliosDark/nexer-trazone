@@ -1,0 +1,15 @@
+[package]
+name        = "nexus_erebus_trade_zone"
+version     = "0.1.0"
+edition     = "2021"
+authors     = ["MaliosDark"]
+description = "Nexus Erebus Trade Zone – Solana Anchor program"
+
+[lib]
+name       = "nexus_erebus_trade_zone"
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+anchor-lang        = "=0.24.2"
+anchor-spl         = "=0.24.2"
+mpl-token-metadata = { version = "1.7.0", package = "mpl-token-metadata", features = ["no-entrypoint"] }

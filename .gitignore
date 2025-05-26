@@ -3,6 +3,7 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+dist/
 .env
 
 .DS_Store
@@ -21,11 +22,16 @@ yarn.lock
 target/
 **/target/
 /programs/trade_zone.rs
+programs/nexus_erebus_trade_zone/src/lib.rs
 Cargo.lock
 Anchor.toml
 Anchor.toml.lock
 idl/
 build/
+
+redis-*.conf
+redis-*.pid
+redis-*.log
 
 *.keypair.json
 *.json
