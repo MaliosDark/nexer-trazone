@@ -1,0 +1,22 @@
+[programs.localnet]
+NexusErebusTradeZone = "Nexus111111111111111111111111111111111111111"
+
+[programs.devnet]
+NexusErebusTradeZone = "Nexus111111111111111111111111111111111111111"
+
+[programs.mainnet]
+NexusErebusTradeZone = "Nexus111111111111111111111111111111111111111"
+
+[registry]
+url = "https://anchor.projectserum.com"
+
+[provider]
+cluster = "localnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "anchor test --skip-deploy"
+build = "anchor build"
+deploy-localnet = "anchor deploy --provider.cluster localnet"
+deploy-devnet = "anchor deploy --provider.cluster devnet"
+deploy-mainnet = "anchor deploy --provider.cluster mainnet"
