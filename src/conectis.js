@@ -16,11 +16,13 @@ import redis from 'redis';
 import { Connection, Keypair, PublicKey, SYSVAR_CLOCK_PUBKEY, SystemProgram } from '@solana/web3.js';
 import anchor from '@project-serum/anchor';
 
+
 import * as buyModule   from './modules/buy.js';
 import * as sellModule  from './modules/sell.js';
 import * as mintModule  from './modules/mint.js';
 import * as tradeModule from './modules/trade.js';
 import * as swapModule  from './modules/swap.js';
+import * as metadataModule from './modules/metadata.js';
 
 // ANSI colors
 const RESET   = '\x1b[0m';
@@ -128,6 +130,7 @@ export function setupAPI(app) {
   router.post('/buy',   wrapHandler(buyModule.handler));
   router.post('/sell',  wrapHandler(sellModule.handler));
   router.post('/trade', wrapHandler(tradeModule.handler));
+  router.get('/metadata/:mint', wrapHandler(metadataModule.handler));
   router.post('/swap',  wrapHandler(swapModule.handler));
   router.post('/unlist', wrapHandler(async (req, res) => {
     console.log(`${MAGENTA}[Action] unlistExpired triggered.${RESET}`);
@@ -176,7 +179,7 @@ export function setupAPI(app) {
     res.json({ success: true, tx });
   }));
 
-
+  
   app.use('/api', router);
 
   console.log(`${CYAN}🚧 Setting up 404 & error handlers...${RESET}`);
