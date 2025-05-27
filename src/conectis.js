@@ -33,9 +33,13 @@ const CYAN    = '\x1b[36m';
 
 // ──────────── Env & Wallet Setup ────────────
 console.log(`${CYAN}🔑 Loading environment variables...${RESET}`);
-const { RPC_URL, KEYPAIR_PATH, PROGRAM_ID, REDIS_URL } = process.env;
+const { RPC_URL, KEYPAIR_PATH, PROGRAM_ID, REDIS_URL, FEE_ACCOUNT } = process.env;
 if (!RPC_URL || !KEYPAIR_PATH || !PROGRAM_ID || !REDIS_URL) {
   console.error(`${RED}[FATAL] Missing one of RPC_URL, KEYPAIR_PATH, PROGRAM_ID or REDIS_URL in .env! Exiting.${RESET}`);
+  process.exit(1);
+}
+if (!FEE_ACCOUNT) {
+  console.error(`${RED}[FATAL] Missing FEE_ACCOUNT in .env!${RESET}`);
   process.exit(1);
 }
 
@@ -68,6 +72,7 @@ try {
 }
 
 export const program = new anchor.Program(idl, PROGRAM_ID, provider);
+export const FEE_COLLECTOR = new PublicKey(FEE_ACCOUNT);
 console.log(`${GREEN}🚀 Anchor program initialized (ID: ${PROGRAM_ID}).${RESET}`);
 
 // ──────────── Redis Setup ────────────

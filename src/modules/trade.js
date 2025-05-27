@@ -1,5 +1,5 @@
 import anchor from '@project-serum/anchor';
-import { program } from '../conectis.js';
+import { program, FEE_COLLECTOR  } from '../conectis.js';
 
 /**
  * trade.js

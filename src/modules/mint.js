@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import anchor from '@project-serum/anchor';
 import { getOrCreateAssociatedTokenAccount } from '@solana/spl-token';
-import { program } from '../conectis.js';
+import { program, FEE_COLLECTOR  } from '../conectis.js';
 
 export async function handler(req, res) {
   try {
@@ -71,7 +71,7 @@ export async function handler(req, res) {
         accounts: {
           market:               marketPda,
           authority:            authority,
-          feeAccount:           authority,
+          feeAccount: FEE_COLLECTOR,
           tokenMint:            mintPubkey,
           tokenAccount:         ata.address,
           tokenData:            anchor.web3.Keypair.generate().publicKey,

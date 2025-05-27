@@ -1,5 +1,5 @@
 import anchor from '@project-serum/anchor';
-import { program } from '../conectis.js';
+import { program, FEE_COLLECTOR  } from '../conectis.js';
 import { getAssociatedTokenAddress } from '@solana/spl-token';
 
 export async function handler(req, res) {
@@ -57,7 +57,7 @@ export async function handler(req, res) {
           user2TokenA:   user2TokenA,
           user1TokenB:   user1TokenB,
           user2TokenB:   user2TokenB,
-          feeAccount:    authority,
+          feeAccount: FEE_COLLECTOR,
           tokenProgram:  anchor.web3.TOKEN_PROGRAM_ID,
         },
       }

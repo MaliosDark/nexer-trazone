@@ -1,5 +1,5 @@
 import anchor from '@project-serum/anchor';
-import { program } from '../conectis.js';
+import { program, FEE_COLLECTOR  } from '../conectis.js';
 import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
 export async function handler(req, res) {
@@ -44,7 +44,7 @@ export async function handler(req, res) {
           seller:             seller,
           buyerTokenAccount:  buyerTokenAccount,
           sellerTokenAccount: sellerTokenAccount,
-          feeAccount:         authority,
+          feeAccount: FEE_COLLECTOR,
           tokenMint:          tokenMint,
           tokenProgram:       TOKEN_PROGRAM_ID,
         },
