@@ -1,4 +1,4 @@
-// By MaliosDark 
+// By MaliosDark
 // A fortress-grade API orchestrator with strict validation, Redis caching, rate-limits, and ominous error messages.
 
 import fs from 'fs';
@@ -12,27 +12,28 @@ import rateLimit from 'express-rate-limit';
 import morgan from 'morgan';
 import { Router } from 'express';
 import redis from 'redis';
+import cors from 'cors';
 
 import { Connection, Keypair, PublicKey, SYSVAR_CLOCK_PUBKEY, SystemProgram } from '@solana/web3.js';
 import anchor from '@project-serum/anchor';
 
 
-import * as buyModule   from './modules/buy.js';
-import * as sellModule  from './modules/sell.js';
-import * as mintModule  from './modules/mint.js';
+import * as buyModule from './modules/buy.js';
+import * as sellModule from './modules/sell.js';
+import * as mintModule from './modules/mint.js';
 import * as tradeModule from './modules/trade.js';
-import * as swapModule  from './modules/swap.js';
+import * as swapModule from './modules/swap.js';
 import * as metadataModule from './modules/metadata.js';
 import * as aiMetaModule from './modules/aiMetadata.js';
 
 // ANSI colors
-const RESET   = '\x1b[0m';
-const RED     = '\x1b[31m';
-const GREEN   = '\x1b[32m';
-const YELLOW  = '\x1b[33m';
-const BLUE    = '\x1b[34m';
+const RESET = '\x1b[0m';
+const RED = '\x1b[31m';
+const GREEN = '\x1b[32m';
+const YELLOW = '\x1b[33m';
+const BLUE = '\x1b[34m';
 const MAGENTA = '\x1b[35m';
-const CYAN    = '\x1b[36m';
+const CYAN = '\x1b[36m';
 
 // ──────────── Env & Wallet Setup ────────────
 console.log(`${CYAN}🔑 Loading environment variables...${RESET}`);
@@ -60,8 +61,8 @@ try {
 // ──────────── Anchor Setup ────────────
 console.log(`${CYAN}🌐 Connecting to Solana cluster at ${RPC_URL}...${RESET}`);
 const connection = new Connection(RPC_URL, 'confirmed');
-const wallet     = new anchor.Wallet(keypair);
-const provider   = new anchor.AnchorProvider(connection, wallet, { preflightCommitment: 'confirmed' });
+const wallet = new anchor.Wallet(keypair);
+const provider = new anchor.AnchorProvider(connection, wallet, { preflightCommitment: 'confirmed' });
 anchor.setProvider(provider);
 
 console.log(`${CYAN}📜 Loading IDL...${RESET}`);
@@ -80,7 +81,7 @@ console.log(`${GREEN}🚀 Anchor program initialized (ID: ${PROGRAM_ID}).${RESET
 
 // ──────────── Redis Setup ────────────
 console.log(`${CYAN}🛠️  Connecting to Redis at ${REDIS_URL} on port 3333...${RESET}`);
-const redisClient = redis.createClient({ url: REDIS_URL, socket: { port: 3333 } });
+export const redisClient = redis.createClient({ url: REDIS_URL, socket: { port: 3333 } });
 redisClient.on('error', err => console.error(`${RED}[Redis] Error: ${err}${RESET}`));
 await redisClient.connect();
 console.log(`${GREEN}✅ Redis connected on port 3333.${RESET}`);
@@ -88,6 +89,19 @@ console.log(`${GREEN}✅ Redis connected on port 3333.${RESET}`);
 // ──────────── Express Setup ────────────
 export function setupAPI(app) {
   console.log(`${CYAN}🔧 Applying middlewares...${RESET}`);
+
+  // Add CORS middleware
+  // Trust first proxy for rate limiting behind reverse proxy
+  app.set('trust proxy', 1);
+
+  const corsOptions = {
+    origin: '*', // Allow all origins (INSECURE FOR PRODUCTION!)
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true, // Allow cookies and authorization headers
+    allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
+    optionsSuccessStatus: 200
+  };
+  app.use(cors(corsOptions));
   app.use(helmet());
   app.use(express.json({ limit: '10kb' }));
   app.use(morgan('combined'));
@@ -95,7 +109,7 @@ export function setupAPI(app) {
   console.log(`${CYAN}⏱️  Setting up rate limiter...${RESET}`);
   app.use('/api/',
     rateLimit({
-      windowMs: 60*60*1000,
+      windowMs: 60 * 60 * 1000,
       max: 100,
       message: {
         error: '🛡️ Too many requests, intruder detected. Try again later—or face the consequences.'
@@ -127,13 +141,13 @@ export function setupAPI(app) {
   router.use('/trade', tradeCache);
 
   console.log(`${CYAN}🔗 Binding routes...${RESET}`);
-  router.post('/mint',  wrapHandler(mintModule.handler));
-  router.post('/buy',   wrapHandler(buyModule.handler));
-  router.post('/sell',  wrapHandler(sellModule.handler));
+  router.post('/mint', wrapHandler(mintModule.handler));
+  router.post('/buy', wrapHandler(buyModule.handler));
+  router.post('/sell', wrapHandler(sellModule.handler));
   router.post('/trade', wrapHandler(tradeModule.handler));
   router.get('/metadata/:mint', wrapHandler(metadataModule.handler));
   router.post('/ai/metadata', wrapHandler(aiMetaModule.handler));   // AI-powered metadata generation
-  router.post('/swap',  wrapHandler(swapModule.handler));
+  router.post('/swap', wrapHandler(swapModule.handler));
   router.post('/unlist', wrapHandler(async (req, res) => {
     console.log(`${MAGENTA}[Action] unlistExpired triggered.${RESET}`);
     const authority = provider.wallet.publicKey;
@@ -167,12 +181,12 @@ export function setupAPI(app) {
       new anchor.BN(100),        // max_tokens_per_agent
       {
         accounts: {
-          market:        marketPda,
-          authority:     authority,
-          feeAccount:    FEE_COLLECTOR,
+          market: marketPda,
+          authority: authority,
+          feeAccount: FEE_COLLECTOR,
           systemProgram: SystemProgram.programId,
-          rent:          anchor.web3.SYSVAR_RENT_PUBKEY,
-          clock:         SYSVAR_CLOCK_PUBKEY,
+          rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+          clock: SYSVAR_CLOCK_PUBKEY,
         },
       }
     );
@@ -181,7 +195,7 @@ export function setupAPI(app) {
     res.json({ success: true, tx });
   }));
 
-  
+
   app.use('/api', router);
 
   console.log(`${CYAN}🚧 Setting up 404 & error handlers...${RESET}`);
