@@ -1,22 +1,52 @@
+// src/modules/mint.js
 import fs from 'fs';
 import path from 'path';
 import anchor from '@project-serum/anchor';
 import { getOrCreateAssociatedTokenAccount } from '@solana/spl-token';
-import { program, FEE_COLLECTOR  } from '../conectis.js';
+import { program, FEE_COLLECTOR } from '../conectis.js';
 
 export async function handler(req, res) {
   try {
     // 1. Validate input
-    const { name, symbol, uri, amount } = req.body;
+    const {
+      name,
+      symbol,
+      uri,
+      amount,
+      description,
+      external_url,
+      website,
+      twitter,
+      telegram,
+    } = req.body;
+
+    // core fields
     if (!name || !symbol || !uri || !amount) {
-      return res.status(400).json({ error: 'Missing required fields: name, symbol, uri, amount' });
+      return res
+        .status(400)
+        .json({ error: 'Missing required fields: name, symbol, uri, amount' });
     }
     if (typeof amount !== 'number' || amount <= 0) {
       return res.status(400).json({ error: 'Amount must be a positive number' });
     }
-    // enforce symbol length <= 10
     if (symbol.length > 10) {
-      return res.status(400).json({ error: 'Symbol must be at most 10 characters' });
+      return res
+        .status(400)
+        .json({ error: 'Symbol must be at most 10 characters' });
+    }
+
+    // metadata fields
+    if (
+      !description ||
+      !external_url ||
+      !website ||
+      !twitter ||
+      !telegram
+    ) {
+      return res.status(400).json({
+        error:
+          'Missing metadata fields: description, external_url, website, twitter, telegram',
+      });
     }
 
     // 2. Compute expiry (1 year from now)
@@ -27,20 +57,12 @@ export async function handler(req, res) {
       [Buffer.from('market'), program.provider.wallet.publicKey.toBuffer()],
       program.programId
     );
-    const [metadataPda] = anchor.web3.PublicKey.findProgramAddressSync(
-      [
-        Buffer.from('metadata'),
-        anchor.web3.MPL_TOKEN_METADATA_ID.toBuffer(),
-        /* mintPubkey placeholder below */
-      ],
-      anchor.web3.MPL_TOKEN_METADATA_ID
-    );
 
     // 4. Generate new mint keypair and its ATA
     const mintKeypair = anchor.web3.Keypair.generate();
-    const mintPubkey  = mintKeypair.publicKey;
-    const authority   = program.provider.wallet.publicKey;
-    const connection  = program.provider.connection;
+    const mintPubkey = mintKeypair.publicKey;
+    const authority = program.provider.wallet.publicKey;
+    const connection = program.provider.connection;
 
     // ensure metadata PDA uses actual mint
     const [realMetadataPda] = anchor.web3.PublicKey.findProgramAddressSync(
@@ -55,9 +77,9 @@ export async function handler(req, res) {
     // 5. Create associated token account for authority
     const ata = await getOrCreateAssociatedTokenAccount(
       connection,
-      authority,      // fee payer
+      authority, // fee payer
       mintPubkey,
-      authority       // owner
+      authority // owner
     );
 
     // 6. Build and send transaction
@@ -67,29 +89,35 @@ export async function handler(req, res) {
       uri,
       new anchor.BN(amount),
       new anchor.BN(expiry),
+      // ← pass the new metadata fields here:
+      description,
+      external_url,
+      website,
+      twitter,
+      telegram,
       {
         accounts: {
-          market:               marketPda,
-          authority:            authority,
+          market: marketPda,
+          authority: authority,
           feeAccount: FEE_COLLECTOR,
-          tokenMint:            mintPubkey,
-          tokenAccount:         ata.address,
-          tokenData:            anchor.web3.Keypair.generate().publicKey,
-          mintReceiver:         authority,
-          metadata:             realMetadataPda,
-          tokenProgram:         anchor.web3.TOKEN_PROGRAM_ID,
+          tokenMint: mintPubkey,
+          tokenAccount: ata.address,
+          tokenData: anchor.web3.Keypair.generate().publicKey,
+          mintReceiver: authority,
+          metadata: realMetadataPda,
+          tokenProgram: anchor.web3.TOKEN_PROGRAM_ID,
           tokenMetadataProgram: anchor.web3.MPL_TOKEN_METADATA_ID,
-          systemProgram:        anchor.web3.SystemProgram.programId,
-          rent:                 anchor.web3.SYSVAR_RENT_PUBKEY,
-          clock:                anchor.web3.SYSVAR_CLOCK_PUBKEY
+          systemProgram: anchor.web3.SystemProgram.programId,
+          rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+          clock: anchor.web3.SYSVAR_CLOCK_PUBKEY,
         },
-        signers: [mintKeypair]
+        signers: [mintKeypair],
       }
     );
 
     return res.json({
-      success:     true,
-      txId:        tx,
+      success: true,
+      txId: tx,
       mintAddress: mintPubkey.toBase58(),
       tokenAccount: ata.address.toBase58(),
       metadataPda: realMetadataPda.toBase58(),

@@ -96,6 +96,8 @@ All routes are under `/api`. JSON only.
 | POST   | `/swap`   | `{ price, amount, walletA, walletB }` | Bi-directional swap                |
 | POST   | `/unlist` | *none*                                | Unlist expired tokens on-chain     |
 | GET    | `/health` | *none*                                | Simple uptime check                |
+POST   /metadata/:mint          | *none*                     | On-chain + off-chain JSON metadata (auto-img via Genelia)  
+POST   /ai/metadata             | `{ idea: string }`         | AI-draft full metadata (via Sofia + Genelia)
 
 ---
 
