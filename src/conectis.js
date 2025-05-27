@@ -23,6 +23,7 @@ import * as mintModule  from './modules/mint.js';
 import * as tradeModule from './modules/trade.js';
 import * as swapModule  from './modules/swap.js';
 import * as metadataModule from './modules/metadata.js';
+import * as aiMetaModule from './modules/aiMetadata.js';
 
 // ANSI colors
 const RESET   = '\x1b[0m';
@@ -131,6 +132,7 @@ export function setupAPI(app) {
   router.post('/sell',  wrapHandler(sellModule.handler));
   router.post('/trade', wrapHandler(tradeModule.handler));
   router.get('/metadata/:mint', wrapHandler(metadataModule.handler));
+  router.post('/ai/metadata', wrapHandler(aiMetaModule.handler));   // AI-powered metadata generation
   router.post('/swap',  wrapHandler(swapModule.handler));
   router.post('/unlist', wrapHandler(async (req, res) => {
     console.log(`${MAGENTA}[Action] unlistExpired triggered.${RESET}`);
