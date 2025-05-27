@@ -9,7 +9,14 @@ description = "Nexus Erebus Trade Zone – Solana Anchor program"
 name       = "nexus_erebus_trade_zone"
 crate-type = ["cdylib", "lib"]
 
+[features]
+no-entrypoint    = []
+no-idl           = []
+no-log-ix-name   = []
+cpi              = ["no-entrypoint"]
+default          = []
+
 [dependencies]
-anchor-lang        = "=0.24.2"
-anchor-spl         = "=0.24.2"
-mpl-token-metadata = { version = "1.7.0", package = "mpl-token-metadata", features = ["no-entrypoint"] }
+anchor-lang        = "0.24.2"
+anchor-spl         = "0.24.2"
+mpl-token-metadata = { version = "1.4.1", package = "mpl-token-metadata", features = ["no-entrypoint"] }

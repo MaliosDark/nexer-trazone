@@ -1,0 +1,2 @@
+[patch.crates-io]
+num-derive = { path = "third_party/num-derive" }
