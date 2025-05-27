@@ -64,7 +64,7 @@ anchor.setProvider(provider);
 console.log(`${CYAN}📜 Loading IDL...${RESET}`);
 let idl;
 try {
-  idl = JSON.parse(fs.readFileSync(path.resolve('./idl/nexus_erebus_trade_zone.json'), 'utf8'));
+  idl = JSON.parse(fs.readFileSync(path.resolve('./target/idl/nexus_erebus_trade_zone.json'), 'utf8'));
   console.log(`${GREEN}✅ IDL loaded.${RESET}`);
 } catch (err) {
   console.error(`${RED}[FATAL] Cannot read IDL: ${err.message}${RESET}`);
@@ -148,6 +148,35 @@ export function setupAPI(app) {
     res.json({ ok: true, timestamp: Date.now(), message: '🛡️ All systems nominal.' });
   });
 
+  router.post('/initialize', wrapHandler(async (_req, res) => {
+    console.log('[Action] initializeMarket…');
+    const authority = provider.wallet.publicKey;
+    const [marketPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from('market'), authority.toBuffer()],
+      program.programId
+    );
+
+    const tx = await program.rpc.initializeMarket(
+      FEE_COLLECTOR,             // fee collector desde .env
+      new anchor.BN(20),         // fee_rate
+      new anchor.BN(100),        // max_tokens_per_agent
+      {
+        accounts: {
+          market:        marketPda,
+          authority:     authority,
+          feeAccount:    FEE_COLLECTOR,
+          systemProgram: SystemProgram.programId,
+          rent:          anchor.web3.SYSVAR_RENT_PUBKEY,
+          clock:         SYSVAR_CLOCK_PUBKEY,
+        },
+      }
+    );
+
+    console.log('[On-chain] initializeMarket tx:', tx);
+    res.json({ success: true, tx });
+  }));
+
+
   app.use('/api', router);
 
   console.log(`${CYAN}🚧 Setting up 404 & error handlers...${RESET}`);
@@ -179,33 +208,5 @@ function wrapHandler(fn) {
   };
 }
 
-router.post('/initialize', wrapHandler(async (_req, res) => {
-  console.log('[Action] initializeMarket…');
-  const authority   = provider.wallet.publicKey;
-  const FEE_COLLECTOR = new PublicKey('7xiz4iWHkeTQ65gYCJZs2Rt26ajkkh7fJ8F7rfagPsiA');
-  const [marketPda] = PublicKey.findProgramAddressSync(
-    [Buffer.from('market'), authority.toBuffer()],
-    program.programId
-  );
-
-  const tx = await program.rpc.initializeMarket(
-    FEE_COLLECTOR,         // ←  wallet collector
-    new anchor.BN(20),     // fee_rate: 0.2%
-    new anchor.BN(100),    // max_tokens_per_agent
-    {
-      accounts: {
-        market:        marketPda,
-        authority:     authority,
-        feeAccount:    FEE_COLLECTOR,
-        systemProgram: SystemProgram.programId,
-        rent:          anchor.web3.SYSVAR_RENT_PUBKEY,
-        clock:         SYSVAR_CLOCK_PUBKEY,
-      },
-    }
-  );
-
-  console.log('[On-chain] initializeMarket tx:', tx);
-  res.json({ success: true, tx });
-}));
 
 console.log(`${GREEN}✨ Conectis.js initialization complete.${RESET}`);

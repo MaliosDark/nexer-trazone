@@ -32,9 +32,10 @@ if (!fs.existsSync(REDIS_CONF)) {
   const conf = `
 bind 127.0.0.1
 port ${REDIS_PORT}
-daemonize yes
-pidfile ${REDIS_PID}
-logfile ${REDIS_LOG}
+daemonize no
+
+protected-mode no
+logfile ""
 dir ${PROJECT_ROOT}
 timeout 0
 tcp-keepalive 300
@@ -43,19 +44,38 @@ tcp-keepalive 300
   console.log(`${GREEN}✅ Created Redis config.${RESET}`);
 }
 
-// 2. Spawn Redis server
+// 2. Spawn Redis server with CLI flags (foreground)
+/*
+  - --port:      puerto
+  - --bind:      sólo en localhost
+  - --protected-mode: off para pruebas locales
+  - --dir:       directorio de persistencia (puede ser PROJECT_ROOT)
+  - --daemonize: no, para que corra en primer plano
+  - --logfile:   "" para volcar logs a stdout
+*/
+// 2. Spawn Redis server with minimal CLI flags (foreground)
 console.log(`${CYAN}🚀 Spawning Redis on port${YELLOW} ${REDIS_PORT}${CYAN}…${RESET}`);
-const redisProc = spawn('redis-server', [REDIS_CONF], {
+const redisProc = spawn('redis-server', [
+  '--port', `${REDIS_PORT}`,
+  '--bind', '127.0.0.1',
+
+], {
   stdio: ['ignore', 'inherit', 'inherit'],
 });
 
-// 3. If Redis exits unexpectedly, shut down API
+
+
+// 3. If Redis exits because port is in use, just warn and continue;
+//    otherwise shut down the API.
 redisProc.on('exit', (code, signal) => {
-  console.error(
-    `${RED}❌ Redis process exited (code=${code}, signal=${signal}), shutting down API.${RESET}`
-  );
+  if (code === 1) {
+    console.warn(`⚠️ Redis failed to start on port ${REDIS_PORT} (already in use). Reusing existing instance.`);
+    return;
+  }
+  console.error(`❌ Redis process exited (code=${code}, signal=${signal}), shutting down API.`);
   process.exit(1);
 });
+
 
 // 4. Ensure Redis is killed when Node exits
 const shutdown = () => {
