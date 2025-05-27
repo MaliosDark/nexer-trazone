@@ -44,3 +44,4 @@ redis-*.log
 *.sln
 
 Thumbs.db
+third_party/num-derive
